@@ -1,0 +1,6 @@
+# CVE-2026-69246 (guzzlehttp/guzzle, HIGH): vendored twice inside the
+# nextcloud:34.0.2-apache release tarball itself (3rdparty/composer and
+# apps/notifications/vendor/composer), not a package this image's own
+# Dockerfile installs or can `apt-get upgrade` its way out of. Remove this
+# waiver once a nextcloud release ships with guzzle >= 7.15.2 / 8.0.1.
+CVE-2026-69246
