@@ -21,11 +21,13 @@ Docker Hub.
   drop. The stock `www-data` account (33/33) is renumbered above 10000 at
   build time — high enough to avoid colliding with a real host account and
   to satisfy `runAsUser`/`runAsGroup` > 10000-style admission policies — and
-  every path it owns (`/var/www`, Apache's pid/lock/log/cache dirs) is
-  re-chowned to match. Apache listens on `8080` instead of `80` (binding
-  <1024 requires root). No `NET_BIND_SERVICE` or other Linux capability is
-  needed — map it to a privileged host port with Docker's `-p` if you want
-  one.
+  every path it owns (`/var/www`, Apache's pid/lock/log/cache dirs,
+  `/usr/local/etc/php/conf.d` — entrypoint.sh writes session-handler ini
+  files there at every startup, e.g. `redis-session.ini` when `REDIS_HOST`
+  is set) is re-chowned to match. Apache listens on `8080` instead of `80`
+  (binding <1024 requires root). No `NET_BIND_SERVICE` or other Linux
+  capability is needed — map it to a privileged host port with Docker's
+  `-p` if you want one.
 - Pinned Nextcloud version via build arg (`NEXTCLOUD_VERSION`) and pinned
   `smbclient` PECL version, rather than floating on `latest`.
 - **`apt-get upgrade` at build time** — pulls in Debian point-release
@@ -39,6 +41,13 @@ Docker Hub.
 docker build --build-arg NEXTCLOUD_VERSION=34.0.2 -t aatind/nextcloud:34.0.2 .
 ```
 
+This builds for your local machine's architecture only. Published images are
+multi-arch (`linux/amd64` + `linux/arm64`) via `scripts/build-and-push.sh` —
+see below. If you're building locally to run on a different architecture
+than your dev machine (e.g. building on Apple Silicon to run on an x86_64
+server), use `docker buildx build --platform linux/amd64 ...` instead, or
+you'll hit `exec format error` at container startup.
+
 ## Run
 
 ```sh
@@ -46,7 +55,6 @@ docker run -d \
   --name nextcloud \
   -p 8080:8080 \
   -v nextcloud_html:/var/www/html \
-  -v nextcloud_data:/var/www/data \
   aatind/nextcloud:34.0.2
 ```
 
@@ -60,21 +68,27 @@ available at runtime to `chown` them for you on first launch.
 
 ## Build, scan, and publish
 
-`scripts/build-and-push.sh` builds the image, scans it with
-[Trivy](https://trivy.dev/), and pushes to `aatind/nextcloud` on Docker Hub
-only if the scan comes back clean of HIGH/CRITICAL vulnerabilities with a
-known fix.
+`scripts/build-and-push.sh` builds the image for each target platform
+(default `linux/amd64,linux/arm64`), scans every platform with
+[Trivy](https://trivy.dev/), and — only if every platform comes back clean
+of HIGH/CRITICAL vulnerabilities with a known fix — builds and pushes a
+proper multi-arch manifest to `aatind/nextcloud` on Docker Hub.
 
 ```sh
 brew install trivy   # one-time
 docker login         # one-time, needs push access to aatind/nextcloud
+
+# one-time: a docker-container buildx builder, needed to push a multi-arch
+# manifest (the default "docker" driver can only build/load, not push one)
+docker buildx create --name multiarch --driver docker-container --use
 
 scripts/build-and-push.sh --version 34.0.2
 ```
 
 Useful flags:
 
-- `--dry-run` — build and scan, but don't push.
+- `--platforms LIST` — override the target platforms (default `linux/amd64,linux/arm64`).
+- `--dry-run` — build and scan every platform, but don't push.
 - `--no-latest` — push the version tag only, skip updating `:latest`.
 - `--severity LIST` — override the failing severities (default `HIGH,CRITICAL`).
 - `--include-unfixed` — also fail on vulnerabilities with no fix available yet.

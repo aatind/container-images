@@ -31,9 +31,12 @@ RUN set -eux; \
 # su when it detects it started as root, and skips the su call entirely when
 # it's already non-root. So what's needed to run the whole container as a
 # fixed unprivileged identity is: port 80 needs root to bind, Apache's
-# pid/lock dirs are root-owned, and the stock www-data account (33/33) is
+# pid/lock dirs are root-owned, the stock www-data account (33/33) is
 # renumbered above 10000 so it can't collide with a real host account and
-# satisfies "runAsUser/runAsGroup > 10000"-style admission policies.
+# satisfies "runAsUser/runAsGroup > 10000"-style admission policies, and
+# /usr/local/etc/php/conf.d needs to stay writable since entrypoint.sh writes
+# session-handler ini files there on every startup (e.g. redis-session.ini
+# when REDIS_HOST is set), not just at build time.
 # usermod/groupmod only rewrite /etc/passwd|group, not existing file
 # ownership, so everything www-data already owns gets re-chowned afterward.
 RUN set -eux; \
@@ -47,7 +50,8 @@ RUN set -eux; \
         /var/run/apache2 \
         /var/lock/apache2 \
         /var/log/apache2 \
-        /var/cache/apache2
+        /var/cache/apache2 \
+        /usr/local/etc/php/conf.d
 
 EXPOSE 8080
 USER 10001:10001
