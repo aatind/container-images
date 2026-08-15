@@ -2,32 +2,11 @@
 
 A minimal [Wolfi](https://github.com/wolfi-dev)-based image built with
 [`apko`](https://github.com/chainguard-dev/apko), carrying the handful of
-tools the `cronjobs` namespace in [gitops](../../gitops) needs (SSH, ping,
-Wake-on-LAN) — built once, pinned, and Trivy-scanned, instead of every
-`CronJob` running `apk add` against `alpine:latest` at every execution.
+tools (SSH, ping,
+Wake-on-LAN) — built once, pinned, and Trivy-scanned.
 
 Published as [`aatind/ops-toolbox`](https://hub.docker.com/r/aatind/ops-toolbox)
 on Docker Hub.
-
-## Why this exists
-
-Every cronjob in `gitops/infrastructure/cronjobs/` used to do this on every
-run, against a writable root filesystem:
-
-```sh
-apk add --update --no-cache openssh sshpass
-```
-
-That means: a network dependency on Alpine's package mirror at run time, no
-control over which package versions actually land, no vulnerability
-scanning of what gets installed, and `readOnlyRootFilesystem: true` (part of
-this cluster's [security hardening
-baseline](../../gitops/docs/security-hardening.md#3-containerpod-securitycontext-requirements))
-is impossible as long as the container has to write new packages into itself
-at startup.
-
-This image bakes the same handful of tools in at build time instead, no
-Wolfi/`apko`-specific magic required to use it — it's a normal OCI image.
 
 ## What's in it
 
@@ -79,11 +58,6 @@ send_wol() {
 send_wol d0:50:99:d9:49:2c
 ```
 
-This replaces Alpine's `awake` package — plain UDP broadcast via `socat`
-only needs the `SO_BROADCAST` socket option (set automatically by socat's
-`broadcast` option), not `CAP_NET_RAW`, so it adds no new capability
-requirement beyond what `ping` already needs in the same container.
-
 ## Build
 
 ```sh
@@ -101,8 +75,7 @@ scripts/build-and-push.sh
 ```
 
 Images are tagged by build date (`YYYYMMDD`), not an upstream version —
-Wolfi is rolling-release, so there's no discrete version number to track the
-way `nextcloud-w-smb` tracks a Nextcloud release. Reference the dated tag
+Wolfi is rolling-release, so there's no discrete version number to track. Reference the dated tag
 from gitops, not `:latest`, so deployments stay reproducible; rerun the
 script (bumping the date) to pick up newer Wolfi package builds.
 
