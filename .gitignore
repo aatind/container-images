@@ -1,0 +1,2 @@
+# apko build artifacts (written to the CWD on every build)
+sbom-*.json
