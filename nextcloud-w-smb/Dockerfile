@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG NEXTCLOUD_VERSION=34.0.2
+ARG NEXTCLOUD_VERSION=35.0.2
 
 FROM nextcloud:${NEXTCLOUD_VERSION}-apache
 

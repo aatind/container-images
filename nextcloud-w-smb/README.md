@@ -38,7 +38,7 @@ Docker Hub.
 ## Build
 
 ```sh
-docker build --build-arg NEXTCLOUD_VERSION=34.0.2 -t aatind/nextcloud:34.0.2 .
+docker build --build-arg NEXTCLOUD_VERSION=35.0.2 -t aatind/nextcloud:35.0.2 .
 ```
 
 This builds for your local machine's architecture only. Published images are
@@ -55,7 +55,7 @@ docker run -d \
   --name nextcloud \
   -p 8080:8080 \
   -v nextcloud_html:/var/www/html \
-  aatind/nextcloud:34.0.2
+  aatind/nextcloud:35.0.2
 ```
 
 Nextcloud is then reachable on host port `8080`. Put a reverse proxy (Caddy,
@@ -82,7 +82,7 @@ docker login         # one-time, needs push access to aatind/nextcloud
 # manifest (the default "docker" driver can only build/load, not push one)
 docker buildx create --name multiarch --driver docker-container --use
 
-scripts/build-and-push.sh --version 34.0.2
+scripts/build-and-push.sh --version 35.0.2
 ```
 
 Useful flags:

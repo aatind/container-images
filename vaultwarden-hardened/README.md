@@ -29,7 +29,7 @@ on Docker Hub.
 ## Build
 
 ```sh
-docker build --build-arg VAULTWARDEN_VERSION=1.37.1 -t aatind/vaultwarden:1.37.1 .
+docker build --build-arg VAULTWARDEN_VERSION=1.37.4 -t aatind/vaultwarden:1.37.4 .
 ```
 
 Builds for your local machine's architecture only — see "Build, scan, and
@@ -46,7 +46,7 @@ docker run -d \
   -e DOMAIN=https://your-domain \
   -e ADMIN_TOKEN=<argon2-phc-string> \
   -v vaultwarden_data:/data \
-  aatind/vaultwarden:1.37.1
+  aatind/vaultwarden:1.37.4
 ```
 
 If you bind-mount a host directory instead of a named volume, make sure it's
@@ -67,7 +67,7 @@ docker login         # one-time, needs push access to aatind/vaultwarden
 # manifest (the default "docker" driver can only build/load, not push one)
 docker buildx create --name multiarch --driver docker-container --use
 
-scripts/build-and-push.sh --version 1.37.1
+scripts/build-and-push.sh --version 1.37.4
 ```
 
 Useful flags:
