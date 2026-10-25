@@ -1,0 +1,33 @@
+# Runs Renovate on a schedule (and on demand) to keep the pinned upstream
+# base-image versions (nextcloud, vaultwarden) in sync with new releases.
+# Renovate opens PRs — it never merges. Review the PR, then rebuild and push
+# the image with the image directory's scripts/build-and-push.sh (the PR's
+# version bump lands in both the Dockerfile ARG and the script default).
+name: renovate
+
+on:
+  schedule:
+    # 06:30 UTC daily
+    - cron: "30 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    container:
+      # Pinned major on purpose: Renovate itself is updated manually.
+      image: ghcr.io/renovatebot/renovate:44
+    permissions:
+      contents: write
+      pull-requests: write
+      labels: write
+    steps:
+      - name: Run Renovate
+        run: renovate
+        env:
+          LOG_LEVEL: info
+          RENOVATE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
