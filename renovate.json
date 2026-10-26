@@ -11,6 +11,14 @@
       "commitMessageTopic": "base image {{depName}}"
     },
     {
+      "matchDatasources": ["custom.pecl"],
+      "labels": ["renovate", "php-extension"],
+      "automerge": false,
+      "groupName": "PECL extension updates",
+      "commitMessageTopic": "PECL extension {{depName}}",
+      "extractVersion": "smbclient-(?<version>\\d+\\.\\d+\\.\\d+)\\.tgz$"
+    },
+    {
       "matchManagers": ["github-actions"],
       "enabled": false
     }
@@ -45,8 +53,25 @@
       "packageNameTemplate": "vaultwarden/server",
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the smbclient PHP extension version pinned in the `pecl install` command (releases scraped from pecl.php.net)",
+      "fileMatch": ["^nextcloud-w-smb/Dockerfile$"],
+      "matchStrings": [
+        "pecl install smbclient-(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "packageNameTemplate": "smbclient",
+      "datasourceTemplate": "custom.pecl",
+      "versioningTemplate": "semver"
     }
   ],
+  "customDatasources": {
+    "pecl": {
+      "defaultRegistryUrlTemplate": "https://pecl.php.net/package/{{packageName}}",
+      "format": "html"
+    }
+  },
   "dockerfile": {
     "enabled": false
   }
