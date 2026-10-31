@@ -37,6 +37,9 @@ The model weights are not in the image. The Deployment downloads them.
 - **Trivy reports, doesn't block** (`--fail-on-vulns` to block). The base is
   a CUDA + PyTorch + vLLM image whose findings can't be fixed here without
   changing what the recipe measured.
+  The script runs a pinned Linux Trivy inside the built image
+  (`trivy rootfs /`) instead of `trivy image`, which copies the whole
+  ~25 GB image to local disk first; no local Trivy install needed.
 
 ## Build, scan, and publish
 
@@ -44,7 +47,7 @@ On an arm64 machine (Docker Desktop: give its VM at least 10 GB of memory;
 the recipe's tests run in 8 GB containers):
 
 ```sh
-brew install trivy   # one-time
+brew install coreutils bash   # one-time; the recipe needs GNU md5sum/sha256sum and bash >= 4.4
 docker login         # one-time, needs push access to aatind/qwen38-flash-dgx
 scripts/build-and-push.sh --dry-run
 scripts/build-and-push.sh
