@@ -1,0 +1,54 @@
+# Builds and pushes qwen3-8-flash-next-ultrafast (ghcr.io/aatind/qwen38-flash-dgx)
+# with its scripts/build-and-push.sh. Manual only (Actions > Run workflow):
+# the build pulls a ~10 GB vLLM image. The other images here are built
+# locally; this one runs in CI because it needs an arm64 machine with
+# ~50 GB of disk, which this public repo gets for free.
+# Pushes with the run's GITHUB_TOKEN, no registry secret needed. After the
+# first push, make the package public (package settings) if it isn't, so
+# the DGX Sparks can pull it without credentials.
+name: qwen3-8-flash-next-ultrafast
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and scan, don't push"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache || true
+          docker system prune -af || true
+          df -h / "$RUNNER_TEMP"
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/v0.58.1/contrib/install.sh \
+            | sudo sh -s -- -b /usr/local/bin v0.58.1
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build, scan, push
+        run: |
+          args=(--work-dir "$RUNNER_TEMP")
+          if [ "${{ inputs.dry_run }}" = true ]; then args+=(--dry-run); fi
+          bash qwen3-8-flash-next-ultrafast/scripts/build-and-push.sh "${args[@]}"
+      - name: Disk after build
+        if: always()
+        run: df -h /
