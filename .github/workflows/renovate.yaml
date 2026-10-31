@@ -23,7 +23,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      labels: write
+      # "labels" is not a valid permission scope (GitHub rejects the whole
+      # workflow at parse time, so every run failed with 0 jobs). Renovate
+      # needs "issues: write" to create/apply PR labels.
+      issues: write
     steps:
       - name: Run Renovate
         run: renovate
