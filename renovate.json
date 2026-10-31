@@ -21,6 +21,11 @@
     {
       "matchManagers": ["github-actions"],
       "enabled": false
+    },
+    {
+      "description": "qwen3-8-flash-next-ultrafast: everything is pinned by the upstream recipe commit, bumped by hand",
+      "matchFileNames": ["qwen3-8-flash-next-ultrafast/**"],
+      "enabled": false
     }
   ],
   "customManagers": [
