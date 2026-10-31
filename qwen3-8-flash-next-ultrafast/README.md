@@ -5,7 +5,8 @@ vLLM for Qwen3.8-Flash-Next on one NVIDIA DGX Spark (GB10), built from the
 recipe, v16b (Apache-2.0). Used by `qwen3-8-flash-next` in
 [cebra-ai-inference](https://github.com/aatind/cebra-ai-inference).
 
-Published as `ghcr.io/aatind/qwen38-flash-dgx:v16b-iter6d-20260910-0c391a3`
+Published on Docker Hub as
+[`aatind/qwen38-flash-dgx:v16b-iter6d-20260910-0c391a3`](https://hub.docker.com/r/aatind/qwen38-flash-dgx)
 (the recipe's image tag plus the recipe commit). arm64 only.
 
 ## What it is
@@ -30,31 +31,27 @@ The model weights are not in the image. The Deployment downloads them.
 ## Differences from the other images here
 
 - **arm64 only.** It's for the Sparks, and the recipe's patches target GB10.
-- **Built in CI**, by `.github/workflows/qwen3-8-flash-next-ultrafast.yaml`
-  (manual), because the build needs an arm64 machine with ~50 GB free disk.
-  The script also runs on any arm64 machine with Docker, such as an Apple
-  Silicon Mac with enough free disk.
+- **Single-arch, plain `docker build`/`docker push`** (no buildx manifest):
+  the recipe's own `build.sh` builds with the local Docker engine. Build it
+  on an arm64 machine with ~50 GB free disk, e.g. an Apple Silicon Mac.
 - **Trivy reports, doesn't block** (`--fail-on-vulns` to block). The base is
   a CUDA + PyTorch + vLLM image whose findings can't be fixed here without
   changing what the recipe measured.
-- **Pushed to GHCR**, not Docker Hub: the workflow pushes with its own
-  `GITHUB_TOKEN`, so no registry secret is needed.
 
 ## Build, scan, and publish
 
-In CI: **Actions → qwen3-8-flash-next-ultrafast → Run workflow** (tick
-"dry run" to build and scan without pushing). After the first push, open
-the package's settings and make it **public** if it isn't, so the Sparks
-can pull it without credentials.
-
-Locally, on arm64:
+On an arm64 machine (Docker Desktop: give its VM at least 10 GB of memory;
+the recipe's tests run in 8 GB containers):
 
 ```sh
-brew install trivy                 # one-time
-docker login ghcr.io -u <user>     # token with write:packages
+brew install trivy   # one-time
+docker login         # one-time, needs push access to aatind/qwen38-flash-dgx
 scripts/build-and-push.sh --dry-run
 scripts/build-and-push.sh
 ```
+
+The Docker Hub repo must stay public: the DGX Sparks pull it without
+credentials.
 
 Run `scripts/build-and-push.sh --help` for all flags.
 
@@ -64,7 +61,7 @@ Run `scripts/build-and-push.sh --help` for all flags.
    commit can change the launch flags as well as the image.
 2. Set `RECIPE_COMMIT` (and `BASE_IMAGE` and the tag prefix in `IMAGE_TAG`
    if the recipe's `build.sh` tags changed) in `scripts/build-and-push.sh`.
-3. Run the workflow, then update the image tag and any changed v16b flags
+3. Build and push, then update the image tag and any changed v16b flags
    in cebra-ai-inference's `qwen3-8-flash-next/deployment.yaml` together.
 
 Renovate is turned off for this directory: everything is pinned by the

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build the Qwen3.8 Flash DGX UltraFast (v16b) image, scan it with Trivy,
 # and push it. Run from anywhere; paths are resolved relative to this
-# script. Runs in CI (.github/workflows/qwen3-8-flash-next-ultrafast.yaml)
-# or on any arm64 machine with Docker and ~50 GB free disk.
+# script. Needs an arm64 machine (e.g. an Apple Silicon Mac) with Docker
+# and ~50 GB free disk.
 #
 #   1. fetch the recipe at RECIPE_COMMIT
 #   2. the recipe's recipe/build/image/build.sh --run: pulls the pinned
@@ -15,7 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTEXT_DIR="$(dirname "$SCRIPT_DIR")"
 
-IMAGE_REPO="ghcr.io/aatind/qwen38-flash-dgx"
+IMAGE_REPO="aatind/qwen38-flash-dgx"
 RECIPE_URL="https://github.com/dime-online/qwen3.8-Flash-DGX-UltraFast.git"
 RECIPE_COMMIT="0c391a3e74b6a775cfe248691ca7fd855b1876a5"
 # The recipe's image tag (recipe/build/image/build.sh) + recipe commit
@@ -31,7 +31,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [options]
 
-  --repo REPO           Image repo to push to (default: ${IMAGE_REPO})
+  --repo REPO           Docker Hub repo to push to (default: ${IMAGE_REPO})
   --tag TAG             Image tag (default: ${IMAGE_TAG})
   --work-dir DIR        Where to fetch the recipe (default: a new temp dir)
   --severity LIST       Trivy severities to report (default: ${SEVERITY})
@@ -42,8 +42,8 @@ Usage: $(basename "$0") [options]
 
 arm64 only: the image is for the DGX Sparks (GB10), and the recipe's
 patches and tests target that build. Requires docker, git, md5sum,
-sha256sum, trivy (unless --skip-scan) and a 'docker login' for the
-registry.
+sha256sum, trivy (unless --skip-scan) and an authenticated 'docker login'
+session.
 
 Trivy is report-only by default, unlike the other images here: the base
 is a CUDA + PyTorch + vLLM image with findings this layer can't fix
