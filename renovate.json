@@ -1,0 +1,78 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "onboarding": false,
+  "dependencyDashboard": false,
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchDepNames": ["nextcloud", "vaultwarden/server"],
+      "labels": ["renovate", "base-image"],
+      "automerge": false,
+      "commitMessageTopic": "base image {{depName}}"
+    },
+    {
+      "matchDatasources": ["custom.pecl"],
+      "labels": ["renovate", "php-extension"],
+      "automerge": false,
+      "groupName": "PECL extension updates",
+      "commitMessageTopic": "PECL extension {{depName}}",
+      "extractVersion": "smbclient-(?<version>\\d+\\.\\d+\\.\\d+)\\.tgz$"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Nextcloud base-image version pinned in the Dockerfile ARG and the build-script default",
+      "fileMatch": [
+        "^nextcloud-w-smb/Dockerfile$",
+        "^nextcloud-w-smb/scripts/build-and-push\\.sh$"
+      ],
+      "matchStrings": [
+        "ARG NEXTCLOUD_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "NEXTCLOUD_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "packageNameTemplate": "nextcloud",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Vaultwarden base-image version pinned in the Dockerfile ARG and the build-script default",
+      "fileMatch": [
+        "^vaultwarden-hardened/Dockerfile$",
+        "^vaultwarden-hardened/scripts/build-and-push\\.sh$"
+      ],
+      "matchStrings": [
+        "ARG VAULTWARDEN_VERSION=(?<currentValue>\\d+\\.\\d+\\.\\d+)",
+        "VAULTWARDEN_VERSION=\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""
+      ],
+      "packageNameTemplate": "vaultwarden/server",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the smbclient PHP extension version pinned in the `pecl install` command (releases scraped from pecl.php.net)",
+      "fileMatch": ["^nextcloud-w-smb/Dockerfile$"],
+      "matchStrings": [
+        "pecl install smbclient-(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "packageNameTemplate": "smbclient",
+      "datasourceTemplate": "custom.pecl",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "customDatasources": {
+    "pecl": {
+      "defaultRegistryUrlTemplate": "https://pecl.php.net/package/{{packageName}}",
+      "format": "html"
+    }
+  },
+  "dockerfile": {
+    "enabled": false
+  }
+}
