@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG VAULTWARDEN_VERSION=1.37.4
+ARG VAULTWARDEN_VERSION=1.37.5
 
 FROM vaultwarden/server:${VAULTWARDEN_VERSION}
 
